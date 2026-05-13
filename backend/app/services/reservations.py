@@ -48,6 +48,9 @@ async def calculate_total_revenue(property_id: str, tenant_id: str) -> Dict[str,
                 # Use SQLAlchemy text for raw SQL
                 from sqlalchemy import text
                 
+
+                ##I added the check_out_date to filter specifically for March 2024. 
+                ##I used this filter so as to ensure revenue is counted when the stay is finished,
                 query = text("""
                     SELECT 
                         property_id,
@@ -55,6 +58,8 @@ async def calculate_total_revenue(property_id: str, tenant_id: str) -> Dict[str,
                         COUNT(*) as reservation_count
                     FROM reservations 
                     WHERE property_id = :property_id AND tenant_id = :tenant_id
+                    AND check_out_date >= '2024-03-01'
+                    AND check_out_date <= '2024-03-31'
                     GROUP BY property_id
                 """)
                 
