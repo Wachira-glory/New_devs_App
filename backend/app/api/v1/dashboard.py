@@ -11,15 +11,22 @@ async def get_dashboard_summary(
     current_user: dict = Depends(get_current_user)
 ) -> Dict[str, Any]:
     
-    tenant_id = getattr(current_user, "tenant_id", "default_tenant") or "default_tenant"
+    ##I switched from using default ID to the user's company ID, 
+    ##because that was accidentally showing Client's A data to Client B
+    tenant_id=current_user.get("tenant_id")
+    # If the user is not known then stop them here for safety.
+    if not tenant_id:
+        raise HTTPException(status_code=403,detail="The Tenant ID is missing.")
     
+    # Get the money data using the correct Company ID.
     revenue_data = await get_revenue_summary(property_id, tenant_id)
     
-    total_revenue_float = float(revenue_data['total'])
+    # Here, I fixed the "cents" issue to show exactly two decimal places.
+    total_revenue_number = round(float(revenue_data['total']),2)
     
     return {
         "property_id": revenue_data['property_id'],
-        "total_revenue": total_revenue_float,
+        "total_revenue": total_revenue_number,
         "currency": revenue_data['currency'],
         "reservations_count": revenue_data['count']
     }
